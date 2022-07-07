@@ -12,6 +12,7 @@ ctx.fillStyle = '#C0C0C0';
 
 let condition = true;
 let allInOrder = true;
+let counter = 0;
 
 let AM_width = 20;
 let arr = []
@@ -53,7 +54,7 @@ const playSound = async (type, rate) => {    //https://stackoverflow.com/questio
   gainNode.connect(audioCtx.destination);
 
 
-  gainNode.gain.value = 1;
+  gainNode.gain.value = 0.1;
   oscillator.frequency.value = rate*8.5;
   oscillator.type = type;
 
@@ -196,24 +197,58 @@ const check = (array, onAction) => {
   return true;
 }
 
-/**
- * "While the array is not sorted, compare each element to the next element, and if the first element
- * is greater than the second element, swap them, and if not, continue to the next element."
- * 
- * The function takes two parameters: an array and a function. The array is the array to be sorted, and
- * the function is a callback function that is called every time the algorithm does something. The
- * callback function takes an object as a parameter, and the object has two properties: type and data.
- * The type property is a string that tells the callback function what the algorithm did, and the data
- * property is an array that contains the data that the callback function needs to do its job.
- * 
- * The callback function is called every time the algorithm does something. The algorithm does three
- * things: it compares two elements, it swaps two elements, and it continues to the next element. The
- * callback function is called with an object that has a type property of
- * @param array - The array to be sorted
- * @param onAction - a function that takes an object with two properties: type and data.
- */
-function bubbleSort(array, onAction) {
-  //Sorting things go here
+function cocktailSort(array, onAction) {
+  while(condition){
+    allInOrder = true;
+
+    for (let i = 0; i < array.length - 1 - counter; i++){
+        onAction({ type: ACTIONS.COMPARE, data: [i, i + 1] });
+        console.log(i)
+
+        if (array[i] > array[i+1]){
+          let b = array[i];
+          array[i] = array[i+1];
+          array[i+1] = b;
+
+          allInOrder = false;
+
+          onAction({ type: ACTIONS.SWAP, data: [i, i + 1] });
+        } else {
+          onAction({type: ACTIONS.CONTINUE, data: i});
+        }
+
+          // onAction({ type: ACTIONS.SORT, data: array.length - i - 1 });
+      }
+
+      for (let i = array.length-2; i > 0 ; i--){
+        onAction({ type: ACTIONS.COMPARE, data: [i, i + 1] });
+
+        if (array[i] > array[i+1]){
+          let b = array[i];
+          array[i] = array[i+1];
+          array[i+1] = b;
+
+          allInOrder = false;
+
+          onAction({ type: ACTIONS.SWAP, data: [i, i + 1] });
+        } else {
+          onAction({type: ACTIONS.CONTINUE, data: i});
+        }
+
+          // onAction({ type: ACTIONS.SORT, data: array.length - i - 1 });
+      }
+
+      if (allInOrder){
+        let secondCheck = check(array, onAction);
+        if (secondCheck){
+          condition = false;
+          console.log("Done!");
+        }else{
+          console.log("Dumbass! How did the first check fail?!");
+        }
+      }
+      counter++
+    }
 }
 
 const start = () => {
@@ -228,7 +263,7 @@ const start = () => {
   drawAll();
 
   /* Calling the bubbleSort function, and passing in the randomArr array and a callback function. */
-  bubbleSort(randomArr ,(action) => {
+  cocktailSort(randomArr ,(action) => {
     ticks++;
     setTimeout(() => {
       actionsMap[action.type](action, arrayMembers);
